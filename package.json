@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "axios": "^1.0.0",
+    "snoowrap": "^1.23.0"
+  },
+  "name": "patrn",
+  "description": "Personalized Analysis Tool for Reddit (Node.js)",
+  "version": "1.0.0",
+  "main": "test_get.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JohannPally/PATRN.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JohannPally/PATRN/issues"
+  },
+  "homepage": "https://github.com/JohannPally/PATRN#readme",
+  "type": "module"
+}
