@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "axios": "^1.0.0",
+    "express": "^4.18.2",
     "snoowrap": "^1.23.0"
   },
   "name": "patrn",
@@ -8,7 +9,8 @@
   "version": "1.0.0",
   "main": "test_get.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,5 @@
   "bugs": {
     "url": "https://github.com/JohannPally/PATRN/issues"
   },
-  "homepage": "https://github.com/JohannPally/PATRN#readme",
-  "type": "module"
+  "homepage": "https://github.com/JohannPally/PATRN#readme"
 }
