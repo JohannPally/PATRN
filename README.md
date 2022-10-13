@@ -1,2 +1,2 @@
 # PATRN
-Personalized Analysis Tool for Reddit (Node.js)
+Personalized Analysis Tool for Reddit community iNteraction
