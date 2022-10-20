@@ -33,16 +33,3 @@ if __name__ == "__main__":
 
     webServer.server_close()
     print("Server stopped.")
-
-reddit = praw.Reddit(
-    client_id="d-7c-MSgBBHA0Mirq5Z3cw",
-    client_secret="EZzaLo5N0p-jmXJYdSF74j7Z7er1VQ",
-    user_agent="Reddit: PATRN:1.0 (by u/<uwukungfuwu>)",
-    username="mace_user_account",
-    password="macebot123")
-
-sia = SentimentIntensityAnalyzer()
-
-for submission in reddit.subreddit("science").hot(limit=10):
-    print(sia.polarity_scores(submission.title))
-    # print(submission.title)
