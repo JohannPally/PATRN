@@ -52,7 +52,7 @@ def radar_sentiment(post):
     fig.update_traces(fill='toself')
     fig.show()
 
-radar_sentiment('yd1lw6')
+# radar_sentiment('ydcy8i')
 
 #====================LINK SPLITTING=========================
 # -1 for invalid 
