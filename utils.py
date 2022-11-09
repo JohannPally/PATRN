@@ -140,9 +140,9 @@ def plt_toxicity_overtime(username, limit):
     fig.show()
 
     
-plt_toxicity_overtime('User_Simulator', 30)
+# plt_toxicity_overtime('User_Simulator', 30)
 
-# plt_rindex_community('UIUC',100)
+plt_rindex_community('UIUC',100)
 #============SUBREDDIT DAG================
 def subreddit_interaction(subreddit_name):
     comment_authors = defaultdict(lambda: defaultdict(lambda: 0))
