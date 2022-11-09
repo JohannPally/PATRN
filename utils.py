@@ -6,6 +6,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from nltk.sentiment import SentimentIntensityAnalyzer
+import toxicity_example
+import time
 
 import plotly.express as px
 import pandas as pd
@@ -20,9 +22,9 @@ reddit = praw.Reddit(
 sia = SentimentIntensityAnalyzer()
 
 #==================R-Index=====================
-def rindex(username):
+def rindex(username, limit):
     user = reddit.redditor(username)
-    submissions = user.submissions.new(limit=1000)
+    submissions = user.submissions.new(limit=limit)
     scores = []
     for link in submissions:
         scores.append(link.score)
@@ -31,8 +33,22 @@ def rindex(username):
     n = len(scores)
     for i in range(n):
         if scores[i] < i:
-            print(i)
-            break
+            return i
+    return i
+
+def rindex_instance(userinstance, limit):
+    user = userinstance
+    submissions = user.submissions.new(limit=limit)
+    scores = []
+    for link in submissions:
+        scores.append(link.score)
+
+    scores.sort(reverse=True)
+    n = len(scores)
+    for i in range(n):
+        if scores[i] < i:
+            return i
+    return i
 
 #================SENTIMENT ANALYSIS==============
 
@@ -87,7 +103,47 @@ def identify_link(link):
     
   return classification
 
-#============Subreddit DAG================
+#=============GRAPHS==============
+
+def plt_rindex_community(subreddit_name, limit):
+    # print(px.data.tips())
+    rinds = []
+    max_ri = 1
+    for submission in reddit.subreddit(subreddit_name).hot(limit = limit):
+        sa = submission.author
+        ri_temp = rindex_instance(sa, limit)
+        rinds.append(ri_temp)
+        if ri_temp > max_ri:
+            max_ri = ri_temp
+    df = pd.DataFrame(data = rinds, columns = ['R-Indeces'])
+    fig = px.histogram(df, x='R-Indeces',nbins = max_ri)
+    fig.show()
+
+def plt_toxicity_overtime(username, limit):
+    user = reddit.redditor(username)
+    submissions = user.comments.new(limit=limit)
+    data = []
+    cnt = 0
+    for link in submissions:
+        if cnt == 60:
+            print('Waiting... (exceeding per minute Google API quota)')
+            time.sleep(58)
+            cnt = 0
+        temp = []
+        temp.append(link.created_utc)
+        temp.append(toxicity_example.get_toxicity_score(link.body))
+        data.append(temp)
+        cnt+=1
+
+    df = pd.DataFrame(data = data , columns = ["Date", "Toxicity"])
+    fig = px.line(df, x='Date', y='Toxicity')
+    fig.show()
+
+    
+plt_toxicity_overtime('User_Simulator', 30)
+
+# plt_rindex_community('UIUC',100)
+#============SUBREDDIT DAG================
 def subreddit_interaction(subreddit_name):
     comment_authors = defaultdict(lambda: defaultdict(lambda: 0))
     post_authors = defaultdict(lambda: 0)
