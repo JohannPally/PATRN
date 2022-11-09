@@ -10,6 +10,7 @@ import toxicity_example
 import time
 
 import plotly.express as px
+import numpy as np
 import pandas as pd
 
 reddit = praw.Reddit(
@@ -142,7 +143,7 @@ def plt_toxicity_overtime(username, limit):
     
 # plt_toxicity_overtime('User_Simulator', 30)
 
-plt_rindex_community('UIUC',100)
+# plt_rindex_community('UIUC',100)
 #============SUBREDDIT DAG================
 def subreddit_interaction(subreddit_name):
     comment_authors = defaultdict(lambda: defaultdict(lambda: 0))
@@ -171,3 +172,29 @@ def subreddit_interaction(subreddit_name):
     plt.show()
 
 # subreddit_interaction('UIUC')
+
+def plt_toxicity_post(post_link, post_limit, threshold):
+    post = reddit.submission(url=post_link)
+    data = []
+    limit_count = 0
+    for comment in post.comments:
+        if (limit_count>=post_limit):
+            break
+        
+        if validators.url(comment.body):
+            continue
+        
+        toxicity_score = toxicity_example.get_toxicity_score(comment.body)
+        data.append(toxicity_score)
+        time.sleep(1)
+        limit_count += 1
+            
+    plt.xlabel("toxicity score")
+    np_data = np.array(data)
+    plt.axvline(x = threshold, color = 'b', label = '')
+
+    plt.hist(np_data)
+    
+    plt.show()
+    
+# plt_toxicity_post("https://www.reddit.com/r/funny/comments/3g1jfi/buttons/", 30, 0.7)
