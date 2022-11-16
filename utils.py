@@ -13,6 +13,8 @@ import plotly.express as px
 import numpy as np
 import pandas as pd
 
+import datetime
+
 reddit = praw.Reddit(
         client_id="d-7c-MSgBBHA0Mirq5Z3cw",
         client_secret="EZzaLo5N0p-jmXJYdSF74j7Z7er1VQ",
@@ -207,6 +209,76 @@ def get_number_controversial_user(username):
 def get_upvote_ratio_post(post):
     return reddit.submission(post).upvote_ratio
     
+#===========ENGAGEMENT===================
+
+
+def plt_user_engagement(username, post_limit):
+    submissions = list(reddit.redditor(username).submissions.new(limit = post_limit))
+    time_dict = defaultdict(lambda: 0)
+    if len(submissions) > 0:
+        temp_date = datetime.fromtimestamp(submissions[0].created_utc).date()
+        for submission in submissions:
+            timestamp = datetime.fromtimestamp(submission.created_utc)
+            time_dict[timestamp.date()] = time_dict[timestamp.date()] + 1
+
+    data = []
+    for key in time_dict:
+        data.append([key, time_dict[key]])
+
+    df = pd.DataFrame(data = data , columns = ["Date", "Engagement"])
+    fig = px.line(df, x='Date', y='Engagement')
+    fig.show()
+
+    return
+
+def plt_subreddit_engagement(subreddit, post_limit):
+    submissions = list(reddit.subreddit(subreddit).new(limit = post_limit))
+    time_dict = defaultdict(lambda: 0)
+    if len(submissions) > 0:
+        temp_date = datetime.fromtimestamp(submissions[0].created_utc).date()
+        for submission in submissions:
+            timestamp = datetime.fromtimestamp(submission.created_utc)
+            time_dict[timestamp.date()] = time_dict[timestamp.date()] + 1
+
+    # pprint.pprint(time_dict)
+    data = []
+    for key in time_dict:
+        data.append([key, time_dict[key]])
+
+    df = pd.DataFrame(data = data , columns = ["Date", "Engagement"])
+    fig = px.line(df, x='Date', y='Engagement')
+    fig.show()
+
+    return
+
+def get_datetime(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp)
+
+def plt_post_engagement(post):
+    comments = list(reddit.submission(post).comments)
+    time_dict = defaultdict(lambda: 0)
+    if len(comments) > 0:
+        temp_date = get_datetime(comments[0].created_utc)
+        for comment in comments:
+            if isinstance(comment, praw.models.MoreComments):
+                continue
+            timestamp = get_datetime(comment.created_utc)
+            if abs(temp_date - timestamp) > datetime.timedelta(hours = 1):
+                temp_date = timestamp
+            time_dict[temp_date] = time_dict[temp_date] + 1
+    # pprint.pprint(time_dict)
+
+    data = []
+    for key in sorted(time_dict.keys()):
+        data.append([key, time_dict[key]])
+    df = pd.DataFrame(data = data , columns = ["Date", "Engagement"])
+    print(df)
+    
+    fig = px.line(df, x='Date', y='Engagement')
+    fig.show()
+
+    return
+
 #=================TESTING===============
 # plt_toxicity_overtime('User_Simulator', 30)
 # plt_rindex_community('UIUC',100)
@@ -217,3 +289,6 @@ def get_upvote_ratio_post(post):
 
 # print(get_number_controversial_user('uwukungfuwu'))
 # print(get_upvote_ratio_post('yvmpx6'))
+# plt_user_engagement('OopsImACrow', 10)
+# plt_subreddit_engagement('UIUC', 1000)
+# plt_post_engagement('yvu8tx')
