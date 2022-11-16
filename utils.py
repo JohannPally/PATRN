@@ -69,8 +69,6 @@ def radar_sentiment(post):
     fig.update_traces(fill='toself')
     fig.show()
 
-# radar_sentiment('ydcy8i')
-
 #====================LINK SPLITTING=========================
 # -1 for invalid 
 # 1 for user
@@ -140,10 +138,6 @@ def plt_toxicity_overtime(username, limit):
     fig = px.line(df, x='Date', y='Toxicity')
     fig.show()
 
-    
-# plt_toxicity_overtime('User_Simulator', 30)
-
-# plt_rindex_community('UIUC',100)
 #============SUBREDDIT DAG================
 def subreddit_interaction(subreddit_name):
     comment_authors = defaultdict(lambda: defaultdict(lambda: 0))
@@ -171,8 +165,6 @@ def subreddit_interaction(subreddit_name):
     nx.draw(G, pos=nx.spring_layout(G))
     plt.show()
 
-# subreddit_interaction('UIUC')
-
 def plt_toxicity_post(post_link, post_limit, threshold):
     post = reddit.submission(url=post_link)
     data = []
@@ -196,5 +188,32 @@ def plt_toxicity_post(post_link, post_limit, threshold):
     plt.hist(np_data)
     
     plt.show()
+
+#========NON-NORMATIVE BEHAVIORS==========
+
+def get_nsfw_over_subreddit(subreddit_name, post_limit):
+    submissions = list(reddit.subreddit(subreddit_name).hot(limit = post_limit))
+    tot = len(submissions)
+    cnt = 0
+    for submission in submissions:
+        if submission.over_18:
+            cnt+=1
+    return (cnt/tot)
+
+def get_number_controversial_user(username):
+    submissions = list(reddit.redditor(username).controversial())
+    return len(submissions)
+
+def get_upvote_ratio_post(post):
+    return reddit.submission(post).upvote_ratio
     
+#=================TESTING===============
+# plt_toxicity_overtime('User_Simulator', 30)
+# plt_rindex_community('UIUC',100)
+# subreddit_interaction('UIUC')
 # plt_toxicity_post("https://www.reddit.com/r/funny/comments/3g1jfi/buttons/", 30, 0.7)
+# radar_sentiment('ydcy8i')
+# print(get_nsfw_over_last_posts('FiftyFifty', 30))
+
+# print(get_number_controversial_user('uwukungfuwu'))
+# print(get_upvote_ratio_post('yvmpx6'))
