@@ -1,0 +1,10 @@
+google_api_python_client==2.66.0
+matplotlib==3.6.2
+networkx==2.8.8
+nltk==3.7
+numpy==1.23.4
+pandas==1.5.1
+plotly==5.11.0
+praw==7.6.0
+tqdm==4.64.1
+validators==0.20.0
