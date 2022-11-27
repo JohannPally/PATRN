@@ -294,10 +294,10 @@ def plt_post_engagement(post):
 # plt_post_engagement('yvu8tx')
 
 
-def get_user_info(link_to_user):
+def get_user_info(username):
     # should return username, date of creation, bio, karma
     
-    user = reddit.redditor(link_to_user)
+    user = reddit.redditor(username)
     
     name = user.name
     bio = user.subreddit.public_description
@@ -305,4 +305,24 @@ def get_user_info(link_to_user):
     karma = user.comment_karma + user.link_karma + user.awarder_karma + user.awardee_karma
     
     to_return = {"username": name, "bio": bio, "date created": date, "karma": karma}
+    return to_return
+
+def get_post_info(post_id):
+    post = reddit.submission(post_id)
+    time = datetime.date.fromtimestamp(post.created)
+    title = post.title
+    score = post.score
+    
+    to_return = {"title": title, "date created": time, "score":score}
+    return to_return    
+
+def get_sub_info(sub):
+    subreddit = reddit.subreddit(sub)
+    name = subreddit.display_name
+    date = datetime.date.fromtimestamp(subreddit.created_utc)
+    description = subreddit.public_description
+    num_subscribers = subreddit.subscribers
+    
+    to_return = {"name": name, "date created": date, "description": description, "total subscribers": num_subscribers}
+    
     return to_return
