@@ -25,7 +25,7 @@ reddit = praw.Reddit(
 sia = SentimentIntensityAnalyzer()
 
 #==================R-Index=====================
-def rindex(username, limit):
+def rindex_user(username, limit):
     user = reddit.redditor(username)
     submissions = user.submissions.new(limit=limit)
     scores = []
@@ -53,14 +53,28 @@ def rindex_instance(userinstance, limit):
             return i
     return i
 
+def plt_rindex_community(subreddit_name, limit):
+    # print(px.data.tips())
+    rinds = []
+    max_ri = 1
+    for submission in reddit.subreddit(subreddit_name).hot(limit = limit):
+        sa = submission.author
+        ri_temp = rindex_instance(sa, limit)
+        rinds.append(ri_temp)
+        if ri_temp > max_ri:
+            max_ri = ri_temp
+    df = pd.DataFrame(data = rinds, columns = ['R-Indeces'])
+    fig = px.histogram(df, x='R-Indeces',nbins = max_ri)
+    fig.show()
+
+def rindex_post(post, limit):
+    sub = reddit.submission(post)
+    return rindex_instance(sub.author, limit)
+
+
 #================SENTIMENT ANALYSIS==============
 
-# for submission in reddit.subreddit("science").hot(limit=10):
-#     print(sia.polarity_scores(submission.title))
-    # print(submission.title)
-
 def radar_sentiment(post):
-    
     body = reddit.submission(post).selftext
     sent_sub = sia.polarity_scores(body)
     senti_list = [sent_sub['pos'], sent_sub['neg'], sent_sub['neu']]
@@ -68,6 +82,45 @@ def radar_sentiment(post):
     r=senti_list,
     theta=['positive', 'negative', 'neutral']))
     fig = px.line_polar(df, r='r', theta='theta', line_close=True)
+    fig.update_traces(fill='toself')
+    fig.show()
+
+def sentiment_user(username, limit):
+    user = reddit.redditor(username)
+    submissions = user.submissions.new(limit=limit)
+    senti_list = []
+    theta_list = []
+    color_list = []
+    for i, link in enumerate(submissions):
+        sent_sub = sia.polarity_scores(link.selftext)
+        senti_list.extend([sent_sub['pos'], sent_sub['neg'], sent_sub['neu']])
+        theta_list.extend(['positive', 'negative', 'neutral'])
+        color_list.extend([i,i,i])
+    df = pd.DataFrame(dict(
+    r=senti_list,
+    theta=theta_list,
+    color=color_list))
+    print(df)
+    fig = px.line_polar(df, r='r', theta='theta', color='color', line_close=True)
+    fig.update_traces(fill='toself')
+    fig.show()
+
+def sentiment_community(subreddit, limit):
+    submissions = reddit.subreddit(subreddit).hot(limit = limit)
+    senti_list = []
+    theta_list = []
+    color_list = []
+    for i, link in enumerate(submissions):
+        sent_sub = sia.polarity_scores(link.selftext)
+        senti_list.extend([sent_sub['pos'], sent_sub['neg'], sent_sub['neu']])
+        theta_list.extend(['positive', 'negative', 'neutral'])
+        color_list.extend([i,i,i])
+    df = pd.DataFrame(dict(
+    r=senti_list,
+    theta=theta_list,
+    color=color_list))
+    print(df)
+    fig = px.line_polar(df, r='r', theta='theta', color='color', line_close=True)
     fig.update_traces(fill='toself')
     fig.show()
 
@@ -106,20 +159,6 @@ def identify_link(link):
 
 #=============GRAPHS==============
 
-def plt_rindex_community(subreddit_name, limit):
-    # print(px.data.tips())
-    rinds = []
-    max_ri = 1
-    for submission in reddit.subreddit(subreddit_name).hot(limit = limit):
-        sa = submission.author
-        ri_temp = rindex_instance(sa, limit)
-        rinds.append(ri_temp)
-        if ri_temp > max_ri:
-            max_ri = ri_temp
-    df = pd.DataFrame(data = rinds, columns = ['R-Indeces'])
-    fig = px.histogram(df, x='R-Indeces',nbins = max_ri)
-    fig.show()
-
 def plt_toxicity_overtime(username, limit):
     user = reddit.redditor(username)
     submissions = user.comments.new(limit=limit)
@@ -139,33 +178,6 @@ def plt_toxicity_overtime(username, limit):
     df = pd.DataFrame(data = data , columns = ["Date", "Toxicity"])
     fig = px.line(df, x='Date', y='Toxicity')
     fig.show()
-
-#============SUBREDDIT DAG================
-def subreddit_interaction(subreddit_name):
-    comment_authors = defaultdict(lambda: defaultdict(lambda: 0))
-    post_authors = defaultdict(lambda: 0)
-
-    for submission in tqdm(reddit.subreddit(subreddit_name).hot(limit = 30)):
-        sa = submission.author
-        post_authors[sa] += len(submission.comments)
-        for comment in submission.comments:
-            ca = comment.author
-            post_authors[ca] += 1
-            comment_authors[ca][sa] += 1
-
-
-    G = nx.DiGraph()
-    for author in tqdm(post_authors):
-        G.add_node(author, node_size = post_authors[author])
-    
-    for author in tqdm(comment_authors):
-        for rec_author in comment_authors[author]:
-            # print(author, rec_author, comment_authors[author][rec_author])
-            G.add_edge(author, rec_author, weight = comment_authors[author][rec_author])
-
-
-    nx.draw(G, pos=nx.spring_layout(G))
-    plt.show()
 
 def plt_toxicity_post(post_link, post_limit, threshold):
     post = reddit.submission(url=post_link)
@@ -190,6 +202,20 @@ def plt_toxicity_post(post_link, post_limit, threshold):
     plt.hist(np_data)
     
     plt.show()
+
+def plt_toxicity_community(subreddit, limit):
+    rinds = []
+    max_ri = 10
+    submission_list = reddit.subreddit(subreddit).hot(limit = limit)
+    for submission in submission_list:
+        sa = submission.title
+        rinds.append(toxicity_example.get_toxicity_score(sa))
+        
+    df = pd.DataFrame(data = rinds, columns = ['Toxicity'])
+    fig = px.histogram(df, x='Toxicity',nbins = max_ri)
+    fig.show()
+
+plt_toxicity_community('technology', 100)
 
 #========NON-NORMATIVE BEHAVIORS==========
 
@@ -278,6 +304,32 @@ def plt_post_engagement(post):
     fig.show()
 
     return
+
+# def subreddit_interaction(subreddit_name):
+#     comment_authors = defaultdict(lambda: defaultdict(lambda: 0))
+#     post_authors = defaultdict(lambda: 0)
+
+#     for submission in tqdm(reddit.subreddit(subreddit_name).hot(limit = 30)):
+#         sa = submission.author
+#         post_authors[sa] += len(submission.comments)
+#         for comment in submission.comments:
+#             ca = comment.author
+#             post_authors[ca] += 1
+#             comment_authors[ca][sa] += 1
+
+
+#     G = nx.DiGraph()
+#     for author in tqdm(post_authors):
+#         G.add_node(author, node_size = post_authors[author])
+    
+#     for author in tqdm(comment_authors):
+#         for rec_author in comment_authors[author]:
+#             # print(author, rec_author, comment_authors[author][rec_author])
+#             G.add_edge(author, rec_author, weight = comment_authors[author][rec_author])
+
+
+#     nx.draw(G, pos=nx.spring_layout(G))
+#     plt.show()
 
 #=================TESTING===============
 # plt_toxicity_overtime('User_Simulator', 30)
