@@ -145,18 +145,24 @@ def plt_toxicity_overtime(username, limit):
     user = reddit.redditor(username)
     submissions = user.comments.new(limit=limit)
     data = []
-    cnt = 0
+    count = 0
     for link in submissions:
-        if cnt == 60:
-            print('Waiting... (exceeding per minute Google API quota)')
-            time.sleep(58)
-            cnt = 0
+        if count == 10:
+            time.sleep(1)
+            count = 0
+
         temp = []
         timestamp = datetime.datetime.fromtimestamp(link.created_utc)
         temp.append(timestamp.date())
-        temp.append(toxicity_example.get_toxicity_score(link.body))
+        
+        try:
+            score = toxicity_example.get_toxicity_score(link.body)
+        except:
+            continue
+        
+        temp.append(score)
         data.append(temp)
-        cnt += 1
+        count += 1
 
     df = pd.DataFrame(data=data, columns=["Date", "Toxicity"])
     fig = px.line(df, x='Date', y='Toxicity')
@@ -169,13 +175,20 @@ def plt_toxicity_post(post_link, post_limit, threshold=0.6):
     data = []
     limit_count = 0
     for comment in post.comments:
+        if limit_count % 10 == 0:
+            time.sleep(1)
+            
         if limit_count >= post_limit:
             break
 
         if validators.url(comment.body):
             continue
-
-        toxicity_score = toxicity_example.get_toxicity_score(comment.body)
+        
+        try:
+            toxicity_score = toxicity_example.get_toxicity_score(comment.body)
+        except:
+            continue
+        
         data.append(toxicity_score)
         time.sleep(1)
         limit_count += 1
@@ -187,25 +200,22 @@ def plt_toxicity_post(post_link, post_limit, threshold=0.6):
     fig.update_layout(showlegend=False)
     html = fig.to_html(include_plotlyjs="require", full_html=False)
     return html
-    #
-    # plt.xlabel("toxicity score")
-    # np_data = np.array(data)
-    # plt.axvline(x=threshold, color='b', label='')
-    #
-    # plt.hist(np_data)
-    # fig = plt.gcf()
-    # buf = io.BytesIO()
-    # fig.savefig(buf)
-    # return buf
 
 
 def plt_toxicity_community(subreddit, limit):
     rinds = []
     max_ri = 10
     submission_list = reddit.subreddit(subreddit).hot(limit=limit)
+    
     for submission in submission_list:
         sa = submission.title
-        rinds.append(toxicity_example.get_toxicity_score(sa))
+        
+        try:
+            toxicity_score = toxicity_example.get_toxicity_score(sa)
+        except:
+            continue
+        
+        rinds.append(toxicity_score)
 
     df = pd.DataFrame(data=rinds, columns=['Toxicity'])
     fig = px.histogram(df, x='Toxicity', nbins=max_ri)
